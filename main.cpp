@@ -224,7 +224,7 @@ int main() {
 	11-10 weak classifier 10 개에 대한 confidence value 계산
 	*/
 	
-	strongClassifier= adaboost.getStrongClassifier(td, 3);
+	strongClassifier= adaboost.getStrongClassifier(td,3);
 	//////////////////////////////////
 	//weakset의 start_x, start_y, end_x, end_y, acc 출력
 	vector<WeakClassifier>weakList=strongClassifier.weakClassifiers();
