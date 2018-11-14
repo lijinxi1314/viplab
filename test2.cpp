@@ -100,7 +100,7 @@ typedef struct {
 }CellPosition;
 
 
-ConfidenceCell cmap[WIDTH][HEIGHT];
+ConfidenceCell cmap[28][28];
 //ConfidenceMap confidence_map;
 
 //////////////////////
@@ -150,11 +150,11 @@ int main() {
 		//int i = 1;
 	{
 		/*if (i < 10)
-		sprintf_s(filepath, "%s/face000%d.png", TR_POS_DIR, i);
+			sprintf_s(filepath, "%s/face000%d.png", TR_POS_DIR, i);
 		else if (i < 100)
-		sprintf_s(filepath, "%s/face00%d.png", TR_POS_DIR, i);
+			sprintf_s(filepath, "%s/face00%d.png", TR_POS_DIR, i);
 		else
-		sprintf_s(filepath, "%s/face0%d.png", TR_POS_DIR, i);*/
+			sprintf_s(filepath, "%s/face0%d.png", TR_POS_DIR, i);*/
 		sprintf(filepath, "%s/%d.bmp", TR_POS_DIR, i);
 		cout << filepath << endl;
 
@@ -197,11 +197,11 @@ int main() {
 	for (int i = 1; i < TR_IMG_PER_CLASS_NEGATIVE + 1; i++)
 	{
 		/*if (i < 10)
-		sprintf_s(filepath, "%s/nonface000%d.png", TR_NEG_DIR, i);
+			sprintf_s(filepath, "%s/nonface000%d.png", TR_NEG_DIR, i);
 		else if (i < 100)
-		sprintf_s(filepath, "%s/nonface00%d.png", TR_NEG_DIR, i);
+			sprintf_s(filepath, "%s/nonface00%d.png", TR_NEG_DIR, i);
 		else
-		sprintf_s(filepath, "%s/nonface0%d.png", TR_NEG_DIR, i);*/
+			sprintf_s(filepath, "%s/nonface0%d.png", TR_NEG_DIR, i);*/
 
 		sprintf(filepath, "%s/%d.bmp", TR_NEG_DIR, i);
 		cout << filepath << endl;
@@ -322,11 +322,11 @@ int main() {
 		//초기화
 		for (int i = 0; i < HEIGHT; i++) {
 			for (int j = 0; j < WIDTH; j++) {
-				cmap[j][i].weak_count = 0;
-				cmap[j][i].total_acc = 0;
-				cmap[j][i].confidence_value = 0;
-				cmap[j][i].pos_x = j;
-				cmap[j][i].pos_y = i;
+				cmap[i][j].weak_count = 0;
+				cmap[i][j].total_acc = 0;
+				cmap[i][j].confidence_value = 0;
+				cmap[i][j].pos_x = i;
+				cmap[i][j].pos_y = j;
 			}
 		}
 	
@@ -367,13 +367,13 @@ int main() {
 		vector<ConfidenceCell> c_cells;
 		for (int i = 0; i < HEIGHT; i++) {
 			for (int j = 0; j < WIDTH; j++) {
-				cmap[j][i].confidence_value = cmap[j][i].total_acc / cmap[j][i].weak_count;
-				if (cmap[j][i].weak_count == 0) {
-					cmap[j][i].confidence_value = 0;
+				cmap[i][j].confidence_value = cmap[i][j].total_acc / cmap[i][j].weak_count;
+				if (cmap[i][j].weak_count == 0) {
+					cmap[i][j].confidence_value = 0;
 				}
-				c_cells.push_back(cmap[j][i]);
+				c_cells.push_back(cmap[i][j]);
 				//printf("cell[%d,%d], confidence_value: %f\t", i, j, cmap[i][j].confidence_value);
-				con_txt << j << "\t" <<i<< "\t" << cmap[j][i].confidence_value<<endl;
+				con_txt << i << "\t" <<j<< "\t" << cmap[i][j].confidence_value<<endl;
 				
 			}
 			cout << endl;
@@ -491,186 +491,123 @@ void drawCombineMSHF(MSHF m, char* filename)
 
 vector<Element> extractFeature(Mat integralImg)
 {
-
 	vector<Element> vec;
 	int featType[5][2] = { { 1, 2 },{ 1, 3 },{ 2, 1 },{ 3, 1 },{ 2, 2 } };
-	//int windowScale_X = integralImg.cols / ORIGINAL_WINDOW_SIZE_X;
-	//int windowScale_Y = integralImg.rows / ORIGINAL_WINDOW_SIZE_Y;
-	int windowScale_X  ;
-	int windowScale_Y  ;
-
+		int windowScale_X = integralImg.cols / ORIGINAL_WINDOW_SIZE_X;
+		int windowScale_Y = integralImg.rows / ORIGINAL_WINDOW_SIZE_Y;
 	//int windoScale = integralImg.cols  ;
 	//int windowScale = 1;
 	int imageH = integralImg.rows;
 	int imageW = integralImg.cols;
 	//imageH 25 imageW25  windowScale 1
 	//	cout <<"Log: "<< imageH << " " << imageW << " " << windowScale << endl;  
-	int maxH ;
-	int maxW;
+		int maxH = imageH / windowScale_Y;
+		int maxW = imageW / windowScale_X;
 	//int maxH = imageH;
 	//int maxW = imageW;
 	int count = 0;
 	int index = 0;
 	int n = 0;
 
-	//text파일 읽는 코드
-
-		//1. 파일 읽기
-		ifstream fin("variable_block.txt");  
-
-		if (!fin) 
-		{
-			cerr << "[variable_block txt file read]fail" << endl;
-			//return -1;
-		}
-			
-		int a, b, c, d;
-	
-		while (!fin.eof()) {
-			fin >> a >> b >> c >> d ;
-			/*cout << endl<<a <<"\t"<< b << "\t" 
-				<< c << "\t" << d <<endl;
-*/
-			windowScale_X = c;
-			windowScale_Y = d;
-			maxH = imageH / windowScale_Y;
-			maxW = imageW / windowScale_X;
-			//a,b,c,d
-			//wsx=c; wsu=d;  width=a; height =b;
-			
-			int type;
-			int width = a;
-			int height = b;
-
-			/*for (int type = 0; type < 5; type++) {
-				int windowCountH = featType[type][0];
-				int windowCountW = featType[type][1];*/
-				/*for (int featH = 1; featH <= (maxH / 1); featH++) {
-					for (int featW = 1; featW <= (maxW / 1); featW++) {*/
-						for (int y = 0; y < imageH - (height ); y += windowScale_Y) {
-							for (int x = 0; x < imageW - ( width  ); x += windowScale_X) {
-								//cout << index << endl;
-								//cout << "windowScale_X" << windowScale_X << "windowScale_Y: " << windowScale_Y << endl;
-								//int width = featW * windowScale_X;
-								//int height = featH * windowScale_Y;
-
-								
-								
-								float result = 0;
-								//type 1,3은 사용하지 않음
-
-								// type 1  =>0
-								if (width>height) {
-									int sum1 = calMaskfromIntegral(integralImg, x, y, width/2, height);
-									int sum2 = calMaskfromIntegral(integralImg, x + width/2, y, width/2, height);
-									result = sum1 - sum2;
-									type = 0;
-								//	cout << " x " << x << " y: " << y << " width: " << width << " height: " << height <<endl;
-									count++;
-								}
-								// type 2 =>1 =>사용안함
-								/*else if () {
-									int sum1 = calMaskfromIntegral(integralImg, x, y, width, height);
-									int sum2 = calMaskfromIntegral(integralImg, x + width, y, width, height);
-									int sum3 = calMaskfromIntegral(integralImg, x + width * 2, y, width, height);
-									result = sum1 - sum2 + sum3;
-								}
-								*/// type 3 =>2 
-								else if (width<height) {
-									int sum1 = calMaskfromIntegral(integralImg, x, y, width, height/2);
-									int sum2 = calMaskfromIntegral(integralImg, x, y + height/2, width, height/2);
-									result = sum1 - sum2;
-									type = 2;
-								//	cout << " x " << x << " y: " << y << " width: " << width << " height: " << height << endl;
-									count++;
-								}
-								// type 4=>3 =>사용안함
-								/*else if (windowCountH == 3 && windowCountW == 1) {
-									int sum1 = calMaskfromIntegral(integralImg, x, y, width, height);
-									int sum2 = calMaskfromIntegral(integralImg, x, y + height, width, height);
-									int sum3 = calMaskfromIntegral(integralImg, x, y + height * 2, width, height);
-									result = sum1 - sum2 + sum3;
-								}*/
-								// type 5 =>4
-								else if(width=height){
-									int sum1 = calMaskfromIntegral(integralImg, x, y, width/2, height/2);
-									int sum2 = calMaskfromIntegral(integralImg, x+width/2, y, width/2, height/2);
-									int sum3 = calMaskfromIntegral(integralImg, x, y+height/2, width/2, height/2);
-									int sum4 = calMaskfromIntegral(integralImg, x + width/2, y + height/2, width/2, height/2);
-									result = sum1 - sum2 - sum3 + sum4;
-									type = 4;
-								//	cout << " x " << x << " y: " << y << " width: " << width << " height: " << height << endl;
-									count++;
-								}
-
-								//총 feature의 수는 5031개가 나와야됨( local patch에 대해)
-								
-								//   cout << endl << "result: " << result << endl;
-
-								//출력확인
-								//cout << "result: " << result << endl;
-								/*	cout << "x: " << x << endl;
-								cout << "y: " << y << endl;
-								cout << "type: " << type << endl;*/
-
-								//cout << "count(index):" << count << endl;
-
-								Element element(x, y, width+x, height+y, type, result);
-								//vec.push_back(result);
-
-								/*if (1) {
-								cout <<"str_x : "<< element.start_x << " str_y : " << element.start_y
-								<<" width : " << width<<" height: "<< height
-								<<" end_x :"<<element.end_x
-								<<" end_y :"<< element.end_y<< " type : " << element.type << "\n"<<endl;
-								}*/
-						//		cout <<"count"<< count << endl;
-								vec.push_back(element);
-
-							}
-
+	for (int type = 0; type < 5; type++) {
+		int windowCountH = featType[type][0];
+		int windowCountW = featType[type][1];
+		for (int featH = 1; featH <= (maxH / windowCountH); featH++) {
+			for (int featW = 1; featW <= (maxW / windowCountW); featW++) {
+				for (int y = 0; y < imageH - (featH * windowScale_Y * windowCountH - 1); y += windowScale_Y) {
+					for (int x = 0; x < imageW - (featW * windowScale_X * windowCountW - 1); x += windowScale_X) {
+						//cout << index << endl;
+						//cout << "windowScale_X" << windowScale_X << "windowScale_Y: " << windowScale_Y << endl;
+						int width = featW * windowScale_X;
+						int height = featH * windowScale_Y;
+						float result = 0;
+						// type 1
+						if (windowCountH == 1 && windowCountW == 2) {
+							int sum1 = calMaskfromIntegral(integralImg, x, y, width, height);
+							int sum2 = calMaskfromIntegral(integralImg, x + width, y, width, height);
+							result = sum1 - sum2;
 						}
-					//}//
+						// type 2
+						else if (windowCountH == 1 && windowCountW == 3) {
+							int sum1 = calMaskfromIntegral(integralImg, x, y, width, height);
+							int sum2 = calMaskfromIntegral(integralImg, x + width, y, width, height);
+							int sum3 = calMaskfromIntegral(integralImg, x + width * 2, y, width, height);
+							result = sum1 - sum2 + sum3;
+						}
+						// type 3
+						else if (windowCountH == 2 && windowCountW == 1) {
+							int sum1 = calMaskfromIntegral(integralImg, x, y, width, height);
+							int sum2 = calMaskfromIntegral(integralImg, x, y + height, width, height);
+							result = sum1 - sum2;
+						}
+						// type 4
+						else if (windowCountH == 3 && windowCountW == 1) {
+							int sum1 = calMaskfromIntegral(integralImg, x, y, width, height);
+							int sum2 = calMaskfromIntegral(integralImg, x, y + height, width, height);
+							int sum3 = calMaskfromIntegral(integralImg, x, y + height * 2, width, height);
+							result = sum1 - sum2 + sum3;
+						}
+						// type 5
+						else {
+							int sum1 = calMaskfromIntegral(integralImg, x, y, width, height);
+							int sum2 = calMaskfromIntegral(integralImg, x, y + height, width, height);
+							int sum3 = calMaskfromIntegral(integralImg, x + width, y, width, height);
+							int sum4 = calMaskfromIntegral(integralImg, x + width, y + height, width, height);
+							result = sum1 - sum2 - sum3 + sum4;
+						}
 
-				//}//
+						/*if (type == 4) {
+							count++;
+						}*/
+						
+						count++;
+						//   cout << endl << "result: " << result << endl;
 
+						//출력확인
+						//cout << "result: " << result << endl;
+						/*	cout << "x: " << x << endl;
+						cout << "y: " << y << endl;
+						cout << "type: " << type << endl;*/
 
-			//}//
-			//cout << n << endl;
+						//cout << "count(index):" << count << endl;
 
-			//for (int i = 0; i < vec.size(); i++) {
-			//	//출력확인
-			//	cout << i<<" 번째 type: "<<vec.at(i).type << endl;
-			//}
-			//cout << "size " << vec.size() << endl;
-			
-		
+						Element element(x, y,width,height, type, result);
+						//vec.push_back(result);
+
+						/*if (element.type ==0) {
+							cout <<"str_x : "<< element.start_x << " str_y : " << element.start_y
+								<<" width : " << width<<" height: "<< height
+								 <<" end_x :"<<element.end_x
+								<<" end_y :"<< element.end_y<< " type : " << element.type << "\n"<<endl;
+						}*/
+						//	cout << n << endl;
+						vec.push_back(element);
+
+					}
+				}
+			}
 
 		}
-	
-		//count출력
-	//	cout <<"feature"<< count << endl;
-		//파일 닫기
-		fin.close();
-
-		return vec;
-	
 
 
-	
+	}
+	//cout << n << endl;
+
+	//for (int i = 0; i < vec.size(); i++) {
+	//	//출력확인
+	//	cout << i<<" 번째 type: "<<vec.at(i).type << endl;
+	//}
+	//cout << "size " << vec.size() << endl;
+	cout << count << endl;
+	return vec;
+
 }
 
 float calMaskfromIntegral(Mat integral, int x, int y, int w, int h)
 {
-	
 	//cout << "integral" << endl;
-	int endX = x + w >= ORIGINAL_WINDOW_SIZE_X ? 63 : x + w;
-	int endY = y + h >= ORIGINAL_WINDOW_SIZE_Y ? 127 : y + h;
-	if (endX >= 64 || endY >= 128) {
-		cout << endX<<" "<<endY<<"err";
-		int x;
-		cin >> x;
-	}
+	int endX = x + w > ORIGINAL_WINDOW_SIZE_X ? 63 : x + w;
+	int endY = y + h > ORIGINAL_WINDOW_SIZE_Y ? 127 : y + h;
 	int sum = integral.at<float>(endY, endX);
 	sum -= x > 0 ? integral.at<float>(endY, x - 1) : 0;
 	sum -= y > 0 ? integral.at<float>(y - 1, endX) : 0;
@@ -691,7 +628,7 @@ void cal_confiValue(int s_x, int s_y, int e_x, int e_y, int _type, float err) {
 
 	for (int i = 0; i < HEIGHT; i++) {
 		for (int j = 0; j < WIDTH; j++) {
-			int cell_x = j, cell_y = i;
+			int cell_x = i, cell_y = j;
 
 			//확인
 
